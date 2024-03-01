@@ -6,11 +6,11 @@ const generateAuthToken = require("../config/generateToke.js");
 
 const router = express.Router();
 
-router.get("/users", (req, res) => {
+router.get("/", (req, res) => {
   res.send(req.body);
 });
 
-router.post("/users/register", async (req, res) => {
+router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const user = await User.create({
@@ -31,7 +31,7 @@ router.post("/users/register", async (req, res) => {
   }
 });
 
-router.get("/users/emailcheck/:email", async (req, res) => {
+router.get("/emailcheck/:email", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });
     if (user) {
