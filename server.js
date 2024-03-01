@@ -1,15 +1,17 @@
+require("dotenv").config();
+const usersRoutes = require("./routes/users.js");
 const express = require("express");
+const mongoose = require("mongoose");
+
 const app = express();
-const http = require("http");
 
-const server = http.createServer((req, res) => {
-  app.get("/", (req, res) => {
-    res.send("<h1>Hello, Express.js Server!</h1>");
-  });
-});
+const connection = require("./db.js");
+connection();
 
-const port = process.env.PORT || 3000; // You can use environment variables for port configuration
+app.use(express.json());
 
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.use("/", usersRoutes);
+
+app.listen(3000, () => {
+  console.log(`Server is running on port ${3000}.`);
 });
