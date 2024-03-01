@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../models/userModel");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
+
+const generateAuthToken = require("../config/generateToke.js");
 
 const router = express.Router();
 
@@ -9,13 +11,21 @@ router.get("/users", (req, res) => {
 });
 
 router.post("/users/register", async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const users = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
+    const user = await User.create({
+      name,
+      email,
+      password,
     });
-    res.send(users);
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token: generateAuthToken(user._id),
+      });
+    }
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -33,27 +43,29 @@ router.get("/users/emailcheck/:email", async (req, res) => {
     res.status(500).send(error.message);
   }
 });
-
 router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-    if (!isPasswordValid) {
-      return res.status(401).send("Invalid password");
+    const auth = await bcrypt.compare(password, user.password);
+    if (!auth) {
+      return res.json({ message: "Incorrect password or email" });
     }
 
-    const token = user.generateAuthToken();
-
-    res.send({ token });
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token: generateAuthToken(user._id),
+    });
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
