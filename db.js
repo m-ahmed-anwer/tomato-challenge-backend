@@ -7,6 +7,7 @@ module.exports = async function () {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   };
+
   try {
     await mongoose.connect(process.env.DATABASE_URL, connectionParams);
     console.log("Connected to database.");
