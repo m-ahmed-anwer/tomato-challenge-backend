@@ -1,7 +1,7 @@
 const express = require("express");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-
+const jwt = require("jsonwebtoken");
 const generateAuthToken = require("../config/generateToke.js");
 
 const router = express.Router();
@@ -43,30 +43,56 @@ router.get("/emailcheck/:email", async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
     }
 
     const auth = await bcrypt.compare(password, user.password);
     if (!auth) {
-      return res.json({ message: "Incorrect password or email" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Incorrect password or email" });
     }
 
+    const token = generateAuthToken(user._id);
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: generateAuthToken(user._id),
+      success: true,
+      user: { _id: user._id, name: user.name, email: user.email },
+      token,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
+});
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    req.user = decoded.user;
+    next();
+  });
+};
+
+router.post("/verifyToken", verifyToken, (req, res) => {
+  // Token is valid, send back user data or whatever you need
+  res.json({ message: "Token is valid", user: req.user });
 });
 
 module.exports = router;
