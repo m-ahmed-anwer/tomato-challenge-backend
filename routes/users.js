@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const generateAuthToken = require("../config/generateToke.js");
+const { isAuth } = require("./auth.js");
 
 const router = express.Router();
 
@@ -56,6 +57,7 @@ router.post("/login", async (req, res) => {
     }
 
     const auth = await bcrypt.compare(password, user.password);
+
     if (!auth) {
       return res
         .status(400)
@@ -63,8 +65,9 @@ router.post("/login", async (req, res) => {
     }
 
     const token = generateAuthToken(user._id);
+
     res.json({
-      success: true,
+      login: true,
       user: { _id: user._id, name: user.name, email: user.email },
       token,
     });
@@ -74,25 +77,37 @@ router.post("/login", async (req, res) => {
   }
 });
 
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization;
+router.get("/verifyToken/:token", async (req, res) => {
+  const token = req.params.token;
 
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+  if (token) {
+    try {
+      const decode = jwt.verify(token, process.env.SECRET_KEY);
+      const user = await User.findById(decode.id);
 
-  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: "Unauthorized" });
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      res.json({
+        login: true,
+        user,
+      });
+    } catch (error) {
+      console.error("JWT verification error:", error.message);
+      res.json({
+        login: false,
+        data: "error",
+      });
     }
-    req.user = decoded.user;
-    next();
-  });
-};
-
-router.post("/verifyToken", verifyToken, (req, res) => {
-  // Token is valid, send back user data or whatever you need
-  res.json({ message: "Token is valid", user: req.user });
+  } else {
+    res.json({
+      login: false,
+      data: "error",
+    });
+  }
 });
 
 module.exports = router;
