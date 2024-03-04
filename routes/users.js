@@ -7,8 +7,13 @@ const { isAuth } = require("./auth.js");
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send(req.body);
+router.get("/score", async (req, res) => {
+  try {
+    const users = await User.find({}, "name score"); // Fetch all users with only 'name' and 'score' fields
+    res.json(users);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 router.post("/register", async (req, res) => {
@@ -18,12 +23,14 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password,
+      score: 0,
     });
     if (user) {
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        score: user.score,
         token: generateAuthToken(user._id),
       });
     }
@@ -68,7 +75,12 @@ router.post("/login", async (req, res) => {
 
     res.json({
       login: true,
-      user: { _id: user._id, name: user.name, email: user.email },
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        score: user.score,
+      },
       token,
     });
   } catch (error) {
