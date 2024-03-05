@@ -16,6 +16,25 @@ router.get("/score", async (req, res) => {
   }
 });
 
+router.post("/updateScore/:userId", async (req, res) => {
+  try {
+    const { score } = req.body;
+    const { userId } = req.params;
+
+    const user = await User.findByIdAndUpdate(userId, { score }, { new: true });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Score updated successfully", user });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
