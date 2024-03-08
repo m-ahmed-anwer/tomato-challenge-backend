@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get("/score", async (req, res) => {
   try {
-    const users = await User.find({}, "name score"); // Fetch all users with only 'name' and 'score' fields
+    const users = await User.find({}, "name score"); 
     res.json(users);
   } catch (error) {
     res.status(500).send(error.message);
