@@ -1,15 +1,15 @@
 const express = require("express");
-const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const generateAuthToken = require("../config/generateToke.js");
 const { isAuth } = require("./auth.js");
+const User = require("../models/userModel");
 
 const router = express.Router();
 
 router.get("/score", async (req, res) => {
   try {
-    const users = await User.find({}, "name score"); 
+    const users = await User.find({}, "name score");
     res.json(users);
   } catch (error) {
     res.status(500).send(error.message);
