@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const generateAuthToken = require("../config/generateToke.js");
 const User = require("../models/userModel.js");
+const { sendEmail } = require("../utils/nodemailer.js");
 
 const getUsers = async (req, res) => {
   try {
@@ -40,7 +41,14 @@ const registerUser = async (req, res) => {
       password,
       score: 0,
     });
-    if (user) {
+      if (user) {
+        
+      await sendEmail(
+        email,
+        "Welcome to Tomato Mystery Challenge!",
+        `Hello ${name}, welcome to Tomato Mystery Challenge!`
+      );
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
