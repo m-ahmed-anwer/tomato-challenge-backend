@@ -5,7 +5,10 @@ const sendEmail = async (req, res) => {
   const { to, subject, text } = req.body;
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: {
+        name: "Tomato Mystery Challenge",
+        address: process.env.EMAIL_USER,
+      },
       to,
       subject,
       text,
